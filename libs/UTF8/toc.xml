@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Addon Author="Jos_eu" APIVersion="9" Name="UTF8" Description="A library for manipulating UTF-8 strings.">
+    <Script Name="utf8.lua"/>
+</Addon>
