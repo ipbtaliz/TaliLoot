@@ -301,6 +301,21 @@ function TaliLoot:ListItem(tSegment, sender, spec)
 	self.wndItemList:ArrangeChildrenVert()
 end
 
+function TaliLoot:DeleteListing(tSegment, sender, spec)
+	local itemData = self:GetItemData(tSegment.uItem)
+
+	if itemData then
+		if self.wndItemList:GetChildren() ~= nil then
+			for childk, childv in ipairs(self.wndItemList:GetChildren()) do
+				if childv:GetData().strName == itemData.strName and childv:FindChild("CharacterName"):GetText() == sender then
+					childv:Destroy()
+				end
+			end
+		end
+		self.wndItemList:ArrangeChildrenVert()
+	end	
+end
+
 --buttons
 function TaliLoot:OnItemCheck( wndHandler, wndControl, eMouseButton )
 
@@ -729,6 +744,8 @@ function TaliLoot:OnChatMessage(channelCurrent, tMessage)
 					self:ListItem(segment, tMessage.strSender, "MS - Main Spec")
 				elseif string.match(string.lower(fullStr), "os") then
 					self:ListItem(segment, tMessage.strSender, "OS - Off Spec")
+				elseif string.match(string.lower(fullStr),"cancel") or string.match(string.lower(fullStr),"pass") or string.match(string.lower(fullStr),"delete") then
+					self:DeleteListing(segment,tMessage.strSender)
 				else
 					self:ListItem(segment, tMessage.strSender, "Other / Unspecified")
 				end
