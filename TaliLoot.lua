@@ -58,7 +58,7 @@ local tItemList = ""
 
 TaliLoot = {
 	name = "TaliLoot",
-	version = "0.1.3",
+	version = "0.1.4",
 
 	nMaxItems = 80000,        -- FIXME: tune these
 	nMaxDisplayedItems = 500, -- 
