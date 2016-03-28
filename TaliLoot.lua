@@ -558,14 +558,20 @@ function TaliLoot:AssignButtonPressed( wndHandler, wndControl, eMouseButton )
 	local tData = wndItem:GetData()
 	local tItem = nil
 	local looterID = nil
+	local perfectItemFound = false
 	local tMasterLoot = GameLib.GetMasterLoot() 
 	for i, value in pairs(tMasterLoot) do
 	
 		if self:GetItemData(tMasterLoot[i]["itemDrop"]).strName == tData.strName then
 			for k, v in pairs(tMasterLoot[i]["tLooters"]) do
 				if wndChar:GetText() == v:GetName() then
-					looterID = v
-					tItem = i
+					if perfectItemFound == false then
+						if tostring(self:GetItemData(tMasterLoot[i]["itemDrop"]).tRunes) == tostring(tData.tRunes) then -- checks if the runeslots are the same
+							perfectItemFound = true
+						end
+						looterID = v
+						tItem = i
+					end
 				end
 			end
 		end
