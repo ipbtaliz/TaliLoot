@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------------------
--- TaliLoot by Linda Giosuè @Jabbit EU
+-- TaliLoot by Linda Giosue @Jabbit EU
 -- Based on RollingDiceLootCouncil - Psyphil <Catharsis>
 --
 --TODO: Change those "check if item isn't already in table" with "removeDuplicates"
@@ -500,12 +500,10 @@ end
 function TaliLoot:OnStartDistribution( wndHandler, wndControl, eMouseButton)
 
 	if table.getn(tItemList) ~= 0 then
-		--MAGARI VA SPOSTATO
 		self.distributionTimeEnd = self:ConvertToSeconds(GameLib.GetLocalTime().nHour,GameLib.GetLocalTime().nMinute,GameLib.GetLocalTime().nSecond) + self.timerTime
 		self.timer:Start()
-		-- Reset item assign to list (the one used for the "list to" button)
-		self.itemListAuto = {}
-		--
+		
+		self.itemListAuto = {} -- Reset item assign to list (the one used for the "list to" button)
 		
 		allChannels[activeChannel]:Send( "==============================="						)
 		allChannels[activeChannel]:Send( "== Distributing loot for " .. self.timerTime .. " seconds"		)
@@ -621,7 +619,7 @@ function TaliLoot:onListAssign( wndHandler, wndControl, eMouseButton )
 			looterID = nil
 			tItem = nil
 			for i, value in pairs(tMasterLoot) do
-				if self:GetItemData(tMasterLoot[i]["itemDrop"]).strName == itemInList then
+				if string.lower(self:GetItemData(tMasterLoot[i]["itemDrop"]).strName) == string.lower(itemInList) then
 					for k, v in pairs(tMasterLoot[i]["tLooters"]) do
 						if string.match(string.lower(v:GetName()),string.lower(name)) then
 							looterID = v
