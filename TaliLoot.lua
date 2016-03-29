@@ -58,7 +58,7 @@ local tItemList = ""
 
 TaliLoot = {
 	name = "TaliLoot",
-	version = "0.1.4",
+	version = "0.1.5",
 
 	nMaxItems = 80000,        -- FIXME: tune these
 	nMaxDisplayedItems = 500, -- 
@@ -89,11 +89,7 @@ function TaliLoot:OnLoad()
 	self.xmlDoc:RegisterCallback("OnDocLoaded", self)
     self.wndMain = Apollo.LoadForm(self.xmlDoc, "TaliLoot", nil, self)
 
-	self.wndItemList = self.wndMain:FindChild("ItemList")
-	self.wndLeftSide = self.wndMain:FindChild("ToolTipContainer")
-	self.HeaderNav = self.wndMain:FindChild("HeaderNav")
-	self.wndStatusBar = self.wndMain:FindChild("StatusBar")
-	self.btnDistribution = self.wndMain:FindChild("StartDistributionBtn")
+
 	--Slash commands and events
 	Apollo.RegisterSlashCommand("taliloot", "OnSlashCommand", self)
 	Apollo.RegisterSlashCommand("tl", "OnSlashCommand", self)
@@ -117,15 +113,22 @@ function TaliLoot:OnLoad()
 	tItemList = {}
 end
 function TaliLoot:OnDocLoaded()
-	if GameLib.GetPlayerUnit() ~= nil then
-		self.wndMain:FindChild("nameBox"):SetText(GameLib.GetPlayerUnit():GetName())
-	end
+	--Various FindChild on the loaded xml form
+	self.wndMain:FindChild("nameBox"):SetText(GameLib.GetPlayerCharacterName()) --GetPlayerCharacterName() should work even if the character has not finished loading
+	self.wndItemList = self.wndMain:FindChild("ItemList")
+	self.wndLeftSide = self.wndMain:FindChild("ToolTipContainer")
+	self.wndStatusBar = self.wndMain:FindChild("StatusBar")
+	self.btnDistribution = self.wndMain:FindChild("StartDistributionBtn")
+	self.wndRaidMembers = self.wndMain:FindChild("raidMemberExtraBtn")
+	self.wndExtraBtn = self.wndMain:FindChild("extraButtons")
 	-- AUTO LIST == A LIST OF ITEMS TO AUTO REMOVE FROM MASTERLOOT(ex. Runes)
 	-- The following list is the default one that will be overwritten if the a cusom one has been provided
 	self.autoList= {"Divine Class Focus - Major","Divine Class Focus - Minor",
 					"Divine Set Focus - Major","Divine Set Focus - Minor",
 					"Pure Set Focus - Major","Pure Set Focus - Minor",
-					"Pure Class Focus - Major","Pure Class Focus - Minor"}
+					"Pure Class Focus - Major","Pure Class Focus - Minor",
+					"Genetic Matrix","Datascape Matrix",
+					"Encrypted Datashard"}
 	self.itemListAuto = {}
 	self:restoreSettings()
 	self.timer = ApolloTimer.Create(self.timerInterval, true, "OnRefresh", self)
@@ -173,6 +176,11 @@ function TaliLoot:OnTestCommand()
 		local item = Item.GetDataFromId(i)
 		table.insert(tItemList, self:GetItemData(item))
 	end
+	if activeChannel == ChatSystemLib.ChatChannel_Party then
+		activeChannel = ChatSystemLib.ChatChannel_Say
+	else
+		activeChannel = ChatSystemLib.ChatChannel_Party
+	end
 end
 
 -----------------------------------------------------------------------------------------------
@@ -199,7 +207,7 @@ function TaliLoot:ShowItemTooltip(item)
 	end	
 end
 
-function TaliLoot:PopulateGearBtn(item)
+function TaliLoot:PopulateGearBtn(item) --not currently used at all
 	local btnUserGear = self.wndMain:FindChild("UserGearBtn")
 	local item = self:GetItemData(item)
 	itemEquipped = 0
@@ -486,14 +494,20 @@ function TaliLoot:CheckRaidAssist()
 	local groupMember = GroupLib.GetGroupMember(1)
 	if groupMember and (groupMember.bIsLeader or groupMember.bMainTank or groupMember.bMainAssist or groupMember.bRaidAssistant) then
 		self.wndStatusBar:Show(false)
-		self.HeaderNav:Show(true)
+		self.btnDistribution:Show(true)
+		self.wndExtraBtn:Show(true)
+		self.wndRaidMembers:Show(false)
 	elseif groupMember then
 		self.wndStatusBar:Show(true)
-		self.HeaderNav:Show(false)
-		self.wndMain:FindChild("extraButtons"):Show(false)	
+		self.btnDistribution:Show(false)
+		self.wndExtraBtn:Show(false)
+		self.wndRaidMembers:Show(true)	
 	else
+
 		self.wndStatusBar:Show(false)
-		self.HeaderNav:Show(true)	
+		self.btnDistribution:Show(true)
+		self.wndExtraBtn:Show(true)
+		self.wndRaidMembers:Show(false)
 	end
 end
 
@@ -524,16 +538,12 @@ function TaliLoot:OnStopDistribution( wndHandler, wndControl, eMouseButton, exte
 end
 
 function TaliLoot:LinkItem( wndHandler, wndControl, eMouseButton )
-	Print(wndControl:GetData().item:GetName())
-	if itemEquipped == 1 and bCurrDistributing then
-		allChannels[activeChannel]:Send( wndControl:GetData().item:GetChatLinkString() )
+	local spec = wndControl:GetText() -- Get the text of the button [MS / OS / Other]
+	if bCurrDistributing and self.currentlyShowedItem ~= nil then
+		allChannels[activeChannel]:Send( spec.." "..self.currentlyShowedItem:GetChatLinkString() )
 	end
 end
 
-function TaliLoot:ConvertToSeconds(hours,minutes,seconds)
-	local res = hours * 60 * 60 + minutes * 60 + seconds
-	return res
-end
 
 function TaliLoot:NextRollItem( wndHandler, wndControl, eMouseButton )
 	--local itemData = self:GetItemData(item)
@@ -647,7 +657,7 @@ function TaliLoot:onLeftoverBtn( wndHandler, wndControl, eMouseButton )
 	local listOfItems = {}
 	local itemFound = false
 	local str
-	local playerName = GameLib.GetPlayerUnit():GetName()
+	local playerName = GameLib.GetPlayerCharacterName()
 	local looterID = nil
 	local tItem = nil
 	local tMasterLoot = GameLib.GetMasterLoot()
@@ -809,4 +819,9 @@ function TaliLoot:OnRefresh()
 		self.timer:Stop()
 		self:OnStopDistribution()
 	end
+end
+
+function TaliLoot:ConvertToSeconds(hours,minutes,seconds)
+	local res = hours * 60 * 60 + minutes * 60 + seconds
+	return res
 end
